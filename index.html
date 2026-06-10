@@ -7,18 +7,10 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; overflow: hidden; }
-
-  /* The iframe renders Portals at a fixed WIDE virtual size so Portals thinks
-     it has desktop width. We then scale the whole frame DOWN to fit Telegram's
-     narrow window via transform. transform-origin top-left keeps it anchored. */
   #frame {
-    position: absolute;
-    top: 0; left: 0;
-    border: 0;
-    display: block;
-    background: #000;
-    transform-origin: 0 0;
-    /* width/height/transform are set by JS in fit() */
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    border: 0; display: block; background: #000;
   }
 </style>
 </head>
@@ -30,43 +22,21 @@
   </iframe>
 
   <script>
-    // Virtual desktop size we pretend the game has. Portals' "play on desktop"
-    // wall triggers below some width; render well above it, then scale to fit.
-    var VW = 1280;   // virtual width  (wide enough to clear Portals' threshold)
-    var VH = 800;    // virtual height (16:10-ish; height re-derived to match window aspect)
-
-    var frame = document.getElementById('frame');
-
-    function fit() {
-      var w = window.innerWidth;
-      var h = window.innerHeight;
-
-      // Scale factor that makes the virtual width fit the real window width.
-      var scale = w / VW;
-
-      // Derive the virtual HEIGHT from the real window aspect so the scaled
-      // result exactly fills the window with no letterbox.
-      var vh = h / scale;
-
-      frame.style.width  = VW + 'px';
-      frame.style.height = vh + 'px';
-      frame.style.transform = 'scale(' + scale + ')';
-    }
-
-    window.addEventListener('resize', fit);
-    fit();
-
-    var tg = window.Telegram && window.Telegram.WebApp;
-    if (tg) {
-      tg.ready();
-      if (tg.exitFullscreen) { try { tg.exitFullscreen(); } catch (e) {} } // stay windowed
-      tg.expand();
-      try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {}
-      tg.onEvent && tg.onEvent('viewportChanged', function () { tg.expand(); fit(); });
-      tg.onEvent && tg.onEvent('fullscreenChanged', function () {
-        if (tg.isFullscreen && tg.exitFullscreen) { try { tg.exitFullscreen(); } catch (e) {} }
-      });
-    }
+    (function () {
+      var tg = window.Telegram && window.Telegram.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        // Go fullscreen so Portals gets a real desktop-sized viewport and loads the game.
+        if (tg.requestFullscreen) { try { tg.requestFullscreen(); } catch (e) {} }
+        try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {}
+        // Re-assert on viewport changes (Telegram sometimes resets it)
+        tg.onEvent && tg.onEvent('viewportChanged', function () { tg.expand(); });
+      }
+      function fit() { document.getElementById('frame').style.height = window.innerHeight + 'px'; }
+      window.addEventListener('resize', fit);
+      fit();
+    })();
   </script>
 </body>
 </html>
