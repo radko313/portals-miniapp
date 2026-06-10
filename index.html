@@ -28,8 +28,15 @@
       var tg = window.Telegram && window.Telegram.WebApp;
       if (tg) {
         tg.ready();                 // tell Telegram we're loaded
+        // Actively leave fullscreen in case Telegram remembered it from a previous build
+        if (tg.isFullscreen && tg.exitFullscreen) { try { tg.exitFullscreen(); } catch (e) {} }
+        if (tg.exitFullscreen) { try { tg.exitFullscreen(); } catch (e) {} }
         tg.expand();                // <-- big window (full-height panel), NOT true fullscreen
         try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {} // stop swipe-to-close eating game input
+        // If Telegram re-enters fullscreen, immediately exit again
+        tg.onEvent && tg.onEvent('fullscreenChanged', function () {
+          if (tg.isFullscreen && tg.exitFullscreen) { try { tg.exitFullscreen(); } catch (e) {} }
+        });
         // Re-assert expand on viewport changes (Telegram sometimes resets it)
         tg.onEvent && tg.onEvent('viewportChanged', function () { tg.expand(); });
       }
