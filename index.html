@@ -28,10 +28,7 @@
       var tg = window.Telegram && window.Telegram.WebApp;
       if (tg) {
         tg.ready();                 // tell Telegram we're loaded
-        tg.expand();                // <-- forces the window to FULL height on open
-        if (tg.requestFullscreen) { // newer Telegram clients (Bot API 8.0+) support true fullscreen
-          try { tg.requestFullscreen(); } catch (e) {}
-        }
+        tg.expand();                // <-- big window (full-height panel), NOT true fullscreen
         try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {} // stop swipe-to-close eating game input
         // Re-assert expand on viewport changes (Telegram sometimes resets it)
         tg.onEvent && tg.onEvent('viewportChanged', function () { tg.expand(); });
